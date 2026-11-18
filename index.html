@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study Notepad</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="logo" id="brandLogo"><i data-icon="book"></i></span>
+      <span class="brand-text"><span class="brand-name" id="brandName">Study Notepad</span><span class="brand-sub" id="brandSub">Your study notebook</span></span>
+    </div>
+
+    <div class="side-actions">
+      <button id="btnDaily" class="btn primary wide"><i data-icon="calendar"></i> Today's note</button>
+      <button id="btnCustom" class="btn ghost wide cz-btn"><i data-icon="sliders"></i> Customize</button>
+      <button id="btnJournal" class="btn ghost wide cz-btn"><i data-icon="lock"></i> Journal entry</button>
+    </div>
+
+    <div class="search">
+      <i data-icon="search"></i>
+      <input id="search" type="search" placeholder="Search notes or #tags (Ctrl+K for everything)" autocomplete="off">
+    </div>
+    <div id="tagCloud" class="tag-cloud" hidden></div>
+
+    <div class="tree-head">
+      <span>Sections</span>
+      <span class="tree-head-actions">
+        <button id="btnImport" class="icon-btn" title="Import .md / .txt files"><i data-icon="upload"></i></button>
+        <button id="btnNewNote" class="icon-btn" title="New note"><i data-icon="filePlus"></i></button>
+        <button id="btnNewFolder" class="icon-btn" title="New section"><i data-icon="folderPlus"></i></button>
+      </span>
+    </div>
+    <div id="tree" class="tree"></div>
+
+    <div class="side-foot">
+      <div id="syncInfo" class="sync-info"></div>
+      <div class="foot-btns">
+        <button id="btnDrive" class="icon-btn" title="Google Drive account"><i data-icon="user"></i></button>
+        <button id="btnSync" class="icon-btn" title="Sync to Google Drive"><i data-icon="cloudUp"></i></button>
+        <button id="btnPull" class="icon-btn" title="Restore from Google Drive"><i data-icon="cloudDown"></i></button>
+        <button id="btnBackup" class="icon-btn" title="Save backup file"><i data-icon="download"></i></button>
+        <button id="btnRestore" class="icon-btn" title="Restore from backup file"><i data-icon="upload"></i></button>
+        <button id="btnTheme" class="icon-btn" title="Toggle light / dark"><i data-icon="sun"></i></button>
+        <button id="btnTrash" class="icon-btn" title="Trash"><i data-icon="trash"></i></button>
+        <button id="btnSecurity" class="icon-btn" title="Privacy and security (encryption, diary lock)"><i data-icon="shield"></i></button>
+      </div>
+      <input type="file" id="fileRestore" accept="application/json" hidden>
+      <input type="file" id="fileImport" accept=".md,.markdown,.txt" multiple hidden>
+    </div>
+    <div class="resizer" id="sideResizer" title="Drag to resize (double-click to reset)"></div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button id="btnSidebar" class="icon-btn" title="Toggle sidebar"><i data-icon="menu"></i></button>
+      <div id="crumbs" class="crumbs"></div>
+      <span id="status" class="status"></span>
+      <span class="pomo">
+        <button id="pomoBtn" class="pomo-btn" title="Study timer: click to start / pause (25 min focus, 5 min break)"><i data-icon="clock"></i><span id="pomoTime">25:00</span></button>
+        <button id="pomoReset" class="icon-btn" title="Reset timer"><i data-icon="redo"></i></button>
+      </span>
+      <button id="btnLock" class="icon-btn" title="Lock this note" hidden></button>
+      <button id="btnHistory" class="icon-btn" title="Version history"><i data-icon="history"></i></button>
+      <button id="btnFocus" class="icon-btn" title="Focus mode (Ctrl+Shift+F)"><i data-icon="maximize"></i></button>
+      <button id="btnKeys" class="icon-btn" title="Keyboard shortcuts (?)"><i data-icon="keyboard"></i></button>
+    </header>
+
+    <div class="toolbar" id="toolbar">
+      <div class="group">
+        <button class="tb" data-cmd="undo" title="Undo (Ctrl+Z)"><i data-icon="undo"></i></button>
+        <button class="tb" data-cmd="redo" title="Redo (Ctrl+Y)"><i data-icon="redo"></i></button>
+      </div>
+      <div class="group">
+        <select id="blockSel" class="tb-select" title="Text style">
+          <option value="p">Paragraph</option>
+          <option value="h1">Heading 1</option>
+          <option value="h2">Heading 2</option>
+          <option value="h3">Heading 3</option>
+          <option value="blockquote">Quote</option>
+        </select>
+      </div>
+      <div class="group">
+        <button class="tb" data-cmd="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+        <button class="tb" data-cmd="italic" title="Italic (Ctrl+I)"><i class="serif">I</i></button>
+        <button class="tb" data-cmd="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+        <button class="tb" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+      </div>
+      <div class="group">
+        <button class="tb" data-tool="color" title="Text colour"><span class="tb-a">A</span><span class="tb-bar" id="barColor"></span></button>
+        <button class="tb" data-tool="highlight" title="Highlight"><i data-icon="highlighter"></i><span class="tb-bar" id="barHl"></span></button>
+      </div>
+      <div class="group">
+        <button class="tb" data-cmd="insertUnorderedList" title="Bullet list (type - then space)"><i data-icon="list"></i></button>
+        <button class="tb" data-cmd="insertOrderedList" title="Numbered list (type 1. then space)"><i data-icon="listOrdered"></i></button>
+        <button class="tb" data-tool="checklist" title="Checklist (type [] then space)"><i data-icon="checkSquare"></i></button>
+      </div>
+      <div class="group">
+        <button class="tb" data-cmd="justifyLeft" title="Align left"><i data-icon="alignLeft"></i></button>
+        <button class="tb" data-cmd="justifyCenter" title="Align centre"><i data-icon="alignCenter"></i></button>
+        <button class="tb" data-cmd="justifyRight" title="Align right"><i data-icon="alignRight"></i></button>
+      </div>
+      <div class="group">
+        <button class="tb wide-tb" data-tool="insert" title="Insert code block, table, image, chart, drawing, link...  (or type / in the note)"><i data-icon="plus"></i><span>Insert</span><i data-icon="chevronDown"></i></button>
+        <button class="tb" data-cmd="removeFormat" title="Clear formatting"><i data-icon="eraser"></i></button>
+        <button class="tb" data-tool="find" title="Find &amp; replace (Ctrl+F)"><i data-icon="search"></i></button>
+        <button class="tb wide-tb" data-tool="export" title="Export selection (or whole note) as PDF, Word, Markdown or text"><i data-icon="download"></i><span>Export</span></button>
+      </div>
+    </div>
+    <input type="file" id="fileImg" accept="image/*" multiple hidden>
+
+    <div class="scroll" id="scroll">
+      <article class="paper" id="paper">
+        <div class="paper-handle left" data-side="left" title="Drag to resize (double-click to reset)"></div>
+        <div class="paper-handle right" data-side="right" title="Drag to resize (double-click to reset)"></div>
+        <input id="title" class="title" type="text" placeholder="Untitled note" autocomplete="off" spellcheck="false">
+        <div id="tagRow" class="tag-row">
+          <span id="tagChips"></span>
+          <input id="tagInput" list="tagList" placeholder="+ Add tag" autocomplete="off" spellcheck="false" maxlength="40">
+          <datalist id="tagList"></datalist>
+          <button type="button" id="reviewBtn" class="tag review-chip" title="Review reminder" hidden></button>
+        </div>
+        <div id="meta" class="meta"></div>
+        <div id="editor" class="editor" contenteditable="true" spellcheck="true" data-placeholder="Start writing your notes... Type / for commands, ``` for a code block."></div>
+        <div id="backlinks" class="backlinks" hidden></div>
+        <div id="imgTools" class="img-tools" hidden>
+          <div class="img-bar">
+            <button type="button" data-size="25">25%</button>
+            <button type="button" data-size="50">50%</button>
+            <button type="button" data-size="75">75%</button>
+            <button type="button" data-size="100">100%</button>
+            <span id="imgDim" class="img-dim"></span>
+            <button type="button" id="imgEdit" data-img="edit" hidden>Edit</button>
+            <button type="button" data-img="del" title="Remove image"><i data-icon="trash"></i></button>
+          </div>
+          <i class="img-h nw" data-h="nw"></i><i class="img-h ne" data-h="ne"></i>
+          <i class="img-h sw" data-h="sw"></i><i class="img-h se" data-h="se"></i>
+        </div>
+      </article>
+
+      <section class="empty" id="empty" hidden>
+        <div class="empty-art"><i data-icon="book"></i></div>
+        <h2 id="emptyTitle">No note open</h2>
+        <p>Create a section for each course or topic, then add a note after every video.</p>
+        <button id="btnEmptyDaily" class="btn primary"><i data-icon="calendar"></i> Start today's note</button>
+      </section>
+
+      <section class="empty" id="lockedView" hidden>
+        <div class="empty-art"><i data-icon="lock"></i></div>
+        <h2>This entry is locked</h2>
+        <p>Enter your diary password to read and edit it.</p>
+        <form id="lockedForm" class="lock-form">
+          <input id="lockedPw" type="password" placeholder="Diary password" autocomplete="off">
+          <button type="submit" class="btn primary">Unlock</button>
+        </form>
+        <button type="button" id="lockedForgot" class="btn ghost" hidden>Forgot password?</button>
+        <p id="lockedErr" class="lock-err"></p>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div id="findbar" class="findbar" hidden>
+  <div class="fb-row">
+    <input id="findQ" placeholder="Find" autocomplete="off" spellcheck="false">
+    <button type="button" id="findCase" class="fb-toggle" title="Match case">Aa</button>
+    <button type="button" id="findWord" class="fb-toggle" title="Whole word"><u>ab</u></button>
+    <span id="findCount" class="fb-count"></span>
+    <button type="button" id="findPrev" class="icon-btn" title="Previous (Shift+Enter)"><i data-icon="arrowUp"></i></button>
+    <button type="button" id="findNext" class="icon-btn" title="Next (Enter)"><i data-icon="arrowDown"></i></button>
+    <button type="button" id="findClose" class="icon-btn" title="Close (Esc)"><i data-icon="x"></i></button>
+  </div>
+  <div class="fb-row">
+    <input id="findR" placeholder="Replace with" autocomplete="off" spellcheck="false">
+    <button type="button" id="findRep" class="btn small">Replace</button>
+    <button type="button" id="findRepAll" class="btn small">Replace all</button>
+  </div>
+</div>
+
+<div id="bubble" class="bubble" hidden>
+  <button type="button" data-cmd="bold" title="Bold"><b>B</b></button>
+  <button type="button" data-cmd="italic" title="Italic"><i class="serif">I</i></button>
+  <button type="button" data-cmd="underline" title="Underline"><u>U</u></button>
+  <button type="button" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+  <button type="button" data-tool="hl" title="Highlight"><i data-icon="highlighter"></i></button>
+  <button type="button" data-tool="inline-code" title="Inline code"><i data-icon="code"></i></button>
+  <button type="button" data-tool="link" title="Link"><i data-icon="link"></i></button>
+  <button type="button" data-cmd="removeFormat" title="Clear formatting"><i data-icon="eraser"></i></button>
+</div>
+<div id="tblBar" class="tbl-bar" hidden>
+  <button type="button" data-t="row+">+ Row</button><button type="button" data-t="col+">+ Column</button>
+  <button type="button" data-t="row-">&minus; Row</button><button type="button" data-t="col-">&minus; Column</button>
+  <button type="button" data-t="del" title="Delete table"><i data-icon="trash"></i></button>
+</div>
+<div id="slash" class="slash" hidden></div>
+<button type="button" id="focusExit" class="focus-exit" hidden>Exit focus mode</button>
+
+<div id="palette" class="palette" hidden>
+  <div class="pal-box">
+    <input id="palQ" placeholder="Search notes, sections, #tags... or type &gt; for actions" autocomplete="off" spellcheck="false">
+    <div id="palList" class="pal-list"></div>
+    <div class="pal-foot"><span>&uarr;&darr; navigate</span><span>Enter open</span><span>Esc close</span></div>
+  </div>
+</div>
+
+<div id="pop" class="pop" hidden></div>
+<div id="printArea"></div>
+<dialog id="dlg" class="dlg"></dialog>
+
+<script src="highlighter.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
